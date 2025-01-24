@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int            @id @default(autoincrement())
+  email     String         @unique
+  firstName String?
+  lastName  String?
+  password  String?        @db.Text
+  roles     RolesOnUsers[]
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @default(now()) @updatedAt
+}
+
+model TokenWhiteList {
+  id             Int      @id @default(autoincrement())
+  userId         Int
+  accessToken    String?  @db.Text
+  refreshToken   String?  @db.Text
+  refreshTokenId Int?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now())
+}
+
+model Roles {
+  id   Int            @id @default(autoincrement())
+  name String         @unique
+  User RolesOnUsers[]
+}
+
+model RolesOnUsers {
+  id     Int   @id @default(autoincrement())
+  userId Int
+  roleId Int
+  User   User  @relation(fields: [userId], references: [id])
+  Roles  Roles @relation(fields: [roleId], references: [id])
+}
+
+model Routes {
+  id       Int      @id @default(autoincrement())
+  date     DateTime @default(now())
+  notes    String?  @db.Text
+  driver    Drivers? @relation(fields: [driverId], references: [id])
+  driverId Int?
+  orders   Orders[]
+}
+
+model Orders {
+  id       Int     @id @default(autoincrement())
+  sequence Int
+  value    Float
+  priority Boolean @default(false)
+  route   Routes? @relation(fields: [routeId], references: [id])
+  routeId Int?
+}
+
+model Drivers {
+  id     Int      @id @default(autoincrement())
+  name   String
+  Routes Routes[]
+}
